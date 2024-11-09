@@ -30,7 +30,7 @@ public:
             } else {
                 int remain = W - curWeight;
                 finalValue += (arr[i].value / static_cast<double>(arr[i].weight)) *
-                               static_cast<double>(remain);
+                              static_cast<double>(remain);
                 break;
             }
         }
@@ -57,48 +57,46 @@ int main() {
 
 // Optimised code is below
 
-// #include <iostream>
-// #include <algorithm>
-// #include <vector>
+#include <iostream>
+#include <algorithm>
 
-// using namespace std;
+using namespace std;
 
-// struct Item {
-//     int value, weight;
-// };
+struct Item {
+    int value, weight;
+};
 
-// bool cmp(Item a, Item b) {
-//     double r1 = (double)a.value / a.weight;
-//     double r2 = (double)b.value / b.weight;
-//     return r1 > r2;
-// }
+bool cmp(Item a, Item b) {
+    double r1 = (double)a.value / a.weight;
+    double r2 = (double)b.value / b.weight;
+    return r1>r2;
+}
 
-// double fractionalKnapsack(int W, vector<Item> arr) {
-//     sort(arr.begin(), arr.end(), cmp);
+double fractionalKnapsack(int W, Item arr[], int n) {
+    sort(arr, arr + n, cmp);
+    double value = 0.0;
+    int curWeight = 0;
 
-//     double finalValue = 0.0;
-//     int curWeight = 0;
+    for (int i = 0; i < n; i++) {
+        if (curWeight + arr[i].weight <= W) {
+            curWeight += arr[i].weight;
+            value += arr[i].value;
+        } else {
+            int remain = W - curWeight;
+            value += arr[i].value * ((double)remain / arr[i].weight);
+            break;
+        }
+    }
 
-//     for (Item item : arr) {
-//         if (curWeight + item.weight <= W) {
-//             curWeight += item.weight;
-//             finalValue += item.value;
-//         } else {
-//             int remain = W - curWeight;
-//             finalValue += item.value * ((double)remain / item.weight);
-//             break;
-//         }
-//     }
+    return value;
+}
 
-//     return finalValue;
-// }
+int main() {
+    int W = 50;
+    Item arr[] = {{100, 20}, {60, 10}, {120, 30}};
+    int n = sizeof(arr) / sizeof(arr[0]);
 
-// int main() {
-//     int W = 50;
-//     vector<Item> arr = {{100, 20}, {60, 10}, {120, 30}};
+    cout << "Maximum value we can obtain is " << fractionalKnapsack(W, arr, n) << endl;
 
-//     double maxValue = fractionalKnapsack(W, arr);
-//     cout << "Maximum value we can obtain is " << maxValue << endl;
-
-//     return 0;
-// }
+    return 0;
+}
