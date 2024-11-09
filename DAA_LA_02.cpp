@@ -1,86 +1,93 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <chrono>
+#include <map>
+#include <bitset>
+#include <cmath>
 
 using namespace std;
 
-struct MinHeapNode {
-    char data;
-    int freq;
-    MinHeapNode* left, *right;
+class Node {
+public:
+  int freq;
+  char symbol;
+  Node* left;
+  Node* right;
+  char huff;
 
-    MinHeapNode(char data, int freq) {
-        left = right = nullptr;
-        this->data = data;
-        this->freq = freq;
-    }
+  Node(int freq, char symbol, Node* left = nullptr, Node* right = nullptr)
+      : freq(freq), symbol(symbol), left(left), right(right), huff(0) {}
+
+  bool operator<(const Node& other) const {
+    return freq > other.freq;
+  }
 };
 
-void printCodes(struct MinHeapNode* root, string str) {
-    if (root == nullptr) {
-        return;
-    }
-    if (root->data != '$') {
-        cout << root->data << ": " << str << endl;
-    }
-    printCodes(root->left, str + "0");
-    printCodes(root->right, str + "1");
+void printNodes(const Node* node, string val = "") {
+  if (node->left) {
+    printNodes(node->left, val + '0');
+  }
+  if (node->right) {
+    printNodes(node->right, val + '1');
+  }
+  if (!node->left && !node->right) {
+    cout << node->symbol << " -> " << val << endl;
+  }
 }
 
-struct compare {
-    bool operator()(MinHeapNode* a, MinHeapNode* b) {
-        return (a->freq > b->freq);
+void calculateHuffmanCodes(const Node* node, const string& code,
+                           map<char, string>& huffmanCodes) {
+  if (node) {
+    if (!node->left && !node->right) {
+      huffmanCodes[node->symbol] = code;
     }
-};
-
-void HuffmanCode(char data[], int freq[], int size) {
-    struct MinHeapNode *left, *right, *temp;
-
-    priority_queue<MinHeapNode*, vector<MinHeapNode*>, compare> minHeap;
-
-    for (int i = 0; i < size; i++) {
-        minHeap.push(new MinHeapNode(data[i], freq[i]));
-    }
-
-    while (minHeap.size() != 1) {
-        left = minHeap.top();
-        minHeap.pop();
-        right = minHeap.top();
-        minHeap.pop();
-        temp = new MinHeapNode('$', left->freq + right->freq);
-        temp->left = left;
-        temp->right = right;
-        minHeap.push(temp);
-    }
-    printCodes(minHeap.top(), "");
+    calculateHuffmanCodes(node->left, code + "0", huffmanCodes);
+    calculateHuffmanCodes(node->right, code + "1", huffmanCodes);
+  }
 }
 
 int main() {
-    int size;
-    cout << "Enter the number of unique characters: ";
-    cin >> size;
+  vector<char> chars = {'a', 'b', 'c', 'd', 'e', 'f'};
+  vector<int> freq = {5, 9, 12, 13, 16, 45};
 
-    char* data = new char[size];
-    int* freq = new int[size];
+  priority_queue<Node> nodes;
 
-    cout << "Enter the characters: ";
-    for (int i = 0; i < size; i++) {
-        cin >> data[i];
-    }
+  for (size_t i = 0; i < chars.size(); ++i) {
+    nodes.push(Node(freq[i], chars[i]));
+  }
 
-    cout << "Enter the frequencies corresponding to the characters: ";
-    for (int i = 0; i < size; i++) {
-        cin >> freq[i];
-    }
+  auto start_time = chrono::high_resolution_clock::now();
 
-    HuffmanCode(data, freq, size);
+  while (nodes.size() > 1) {
+    Node* left = new Node(nodes.top());
+    nodes.pop();
+    Node* right = new Node(nodes.top());
+    nodes.pop();
 
-    delete[] data; // Free allocated memory
-    delete[] freq; // Free allocated memory
+    left->huff = '0';
+    right->huff = '1';
 
-    return 0;
+    Node* newNode = new Node(left->freq + right->freq, left->symbol + right->symbol, left, right);
+    nodes.push(*newNode);
+  }
+
+  auto end_time = chrono::high_resolution_clock::now();
+  auto duration = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
+
+  cout << "Huffman Tree Construction Elapsed Time: " << duration.count() << " microseconds" << endl;
+
+  map<char, string> huffmanCodes;
+  calculateHuffmanCodes(&nodes.top(), "", huffmanCodes);
+
+  // Calculate space used for the Huffman codes
+  double spaceUsed = 0;
+  for (const auto& kv : huffmanCodes) {
+    spaceUsed += kv.first * kv.second.length();
+  }
+  spaceUsed = ceil(spaceUsed / 8); // Convert bits to bytes
+
+  cout << "Estimated Space Used for Huffman Codes: " << spaceUsed << " bytes" << endl;
+
+  return 0;
 }
-
-/*
-Huffman Coding :
-Time complexity: O(nlogn) where n is the number of unique characters.
-If there are n nodes, extractMin() is called 2*(n – 1) times. extractMin() takes O(logn) time as it calls minHeapify(). So, overall complexity is O(nlogn).
-*/
